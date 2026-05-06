@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRASHX</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #050508; font-family: 'Share Tech Mono', monospace; color: #fff; min-height: 100vh; overflow: hidden; }
+  .screen { display: none; width: 100%; height: 100vh; }
+  .screen.active { display: flex; }
+ 
+  #matrix-canvas { position: fixed; top: 0; left: 0; z-index: 0; opacity: 0.18; pointer-events: none; }
+  .scan-line { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(0,150,255,0.2), transparent); animation: scan 3s linear infinite; z-index: 1; }
+  @keyframes scan { 0%{top:0} 100%{top:100vh} }
+ 
+  /* LOGIN */
+  #login-screen { align-items: center; justify-content: center; flex-direction: column; }
+  .login-box {
+    position: relative; z-index: 2;
+    background: rgba(8,0,0,0.92); border: 1px solid #0066ff; border-radius: 4px;
+    padding: 40px 40px 32px; width: 430px;
+    box-shadow: 0 0 50px rgba(0,100,255,0.3), 0 0 20px rgba(0,150,255,0.2);
+  }
+  .corner { position: absolute; width: 14px; height: 14px; border-color: #0066ff; border-style: solid; }
+  .corner.tl{top:-1px;left:-1px;border-width:2px 0 0 2px}
+  .corner.tr{top:-1px;right:-1px;border-width:2px 2px 0 0}
+  .corner.bl{bottom:-1px;left:-1px;border-width:0 0 2px 2px}
+  .corner.br{bottom:-1px;right:-1px;border-width:0 2px 2px 0}
+ 
+  /* MARIAM title above logo */
+  .mariam-title {
+    font-family: 'Orbitron', monospace;
+    font-size:52px; font-weight: 900;
+    color: #ff4444;
+    text-align: center;
+    letter-spacing:6px;
+    margin-bottom: 10px;
+    text-shadow: 0 0 16px rgba(255,50,50,0.6);
+  }
+  .mariam-sub {
+    font-size:16px; color: #770000;
+    text-align: center; letter-spacing: 3px;
+    margin-bottom: 6px;
+  }
+ 
+  .logo { font-family:'Orbitron',monospace; font-size:48px; font-weight:900; color:#ff2222; text-align:center; letter-spacing:6px; margin-bottom:4px; text-shadow:0 0 24px rgba(255,0,0,0.6); }
+  .logo-sub { font-size:10px; color:#550000; text-align:center; letter-spacing:6px; margin-bottom:30px; }
+ 
+  .field-label { font-size:11px; color:#880000; letter-spacing:3px; margin-bottom:8px; display:block; }
+  .field-input { width:100%; background:rgba(20,0,0,0.8); border:1px solid #003388; border-radius:2px; color:#ff4444; font-family:'Share Tech Mono',monospace; font-size:16px; padding:12px 16px; margin-bottom:22px; outline:none; transition:border-color 0.2s; letter-spacing:2px; }
+  .field-input:focus { border-color:#cc0000; box-shadow:0 0 10px rgba(200,0,0,0.2); }
+  .field-input::placeholder { color:#330000; }
+ 
+  .login-btn { width:100%; background: linear-gradient(90deg,#cc0000,#0055cc); border:none; border-radius:2px; color:#fff; font-family:'Orbitron',monospace; font-size:13px; font-weight:700; letter-spacing:4px; padding:14px; cursor:pointer; transition:background 0.2s,box-shadow 0.2s; margin-top:4px; }
+  .login-btn:hover { background:linear-gradient(90deg,#ff0000,#0077ff); box-shadow:0 0 28px rgba(0,100,255,0.6), 0 0 14px rgba(255,0,0,0.4); }
+  .login-btn:active { transform:scale(0.98); }
+  .error-msg { color:#ff4444; font-size:11px; text-align:center; margin-top:12px; letter-spacing:2px; min-height:16px; }
+ 
+  .tg-login { text-align:center; margin-top:20px; padding:14px 0 4px; border-top:1px solid #2a0000; }
+  .tg-login .tg-label { font-size:11px; color:#550000; letter-spacing:3px; margin-bottom:8px; }
+  .tg-login a { display:inline-block; color:#2aabee; text-decoration:none; font-family:'Orbitron',monospace; font-size:38px; font-weight:900; letter-spacing:6px; text-shadow:0 0 14px rgba(42,171,238,0.5); transition:all 0.2s; }
+  .tg-login a:hover { color:#7dd4ff; text-shadow:0 0 24px rgba(42,171,238,0.8); }
+ 
+  /* LOADING */
+  #loading-screen { align-items:center; justify-content:center; flex-direction:column; gap:28px; }
+  .loading-title { font-family:'Orbitron',monospace; font-size:22px; font-weight:700; color:#ff2222; letter-spacing:6px; text-align:center; z-index:2; text-shadow:0 0 20px rgba(255,0,0,0.4); }
+  .loading-sub { font-size:11px; color:#550000; letter-spacing:6px; text-align:center; z-index:2; margin-top:-16px; }
+  .progress-wrap { width:360px; z-index:2; }
+  .progress-bar-bg { width:100%; height:6px; background:rgba(100,0,0,0.3); border:1px solid #003388; border-radius:2px; overflow:hidden; margin-bottom:10px; }
+  .progress-bar-fill { height:100%; width:0%; background:linear-gradient(90deg,#0033cc,#0099ff,#ff2222); border-radius:2px; transition:width 0.5s linear; box-shadow:0 0 8px rgba(0,150,255,0.7); }
+  .progress-pct { font-size:12px; color:#cc0000; text-align:right; letter-spacing:2px; }
+  .loading-log { font-size:11px; color:#550000; letter-spacing:2px; text-align:center; z-index:2; }
+ 
+  /* DASHBOARD */
+  #dashboard-screen { flex-direction:column; align-items:center; justify-content:center; gap:30px; }
+  .dash-header { position:absolute; top:24px; left:0; right:0; display:flex; justify-content:space-between; align-items:center; padding:0 32px; z-index:2; }
+  .dash-logo { font-family:'Orbitron',monospace; font-size:15px; font-weight:900; color:#cc0000; letter-spacing:4px; }
+  .dash-uid { font-size:11px; color:#440000; letter-spacing:3px; }
+ 
+  /* MARIAM on dashboard */
+  .mariam-dash {
+    font-family:'Orbitron',monospace;
+    font-size:32px; font-weight:900;
+    color:#ff4444; letter-spacing:5px;
+    text-align:center; z-index:2;
+    text-shadow:0 0 16px rgba(255,50,50,0.5);
+  }
+  .mariam-dash span { font-size:11px; color:#550000; letter-spacing:3px; display:block; margin-bottom:4px; font-weight:400; }
+ 
+  .green-screen { width:360px; height:180px; border:2px solid #00ff44; border-radius:4px; overflow:hidden; box-shadow:0 0 30px rgba(0,255,60,0.3); position:relative; z-index:2; }
+  .green-screen img { width:100%; height:100%; object-fit:cover; display:block; }
+ 
+  .btn-group { display:flex; flex-direction:row; gap:20px; z-index:2; }
+  .game-btn { font-family:'Orbitron',monospace; font-size:17px; font-weight:900; letter-spacing:5px; width:160px; height:60px; border-radius:3px; cursor:pointer; transition:all 0.2s; }
+  .btn-start { background:linear-gradient(135deg,#cc0000,#0055cc); border:1px solid #3399ff; color:#fff; box-shadow:0 0 22px rgba(0,100,255,0.4), 0 0 10px rgba(255,0,0,0.3); }
+  .btn-start:hover { background:#ff0000; box-shadow:0 0 40px rgba(0,150,255,0.6), 0 0 20px rgba(255,0,0,0.4); transform:translateY(-2px); }
+  .btn-again { background:transparent; border:1px solid #004499; color:#cc0000; }
+  .btn-again:hover { border-color:#cc0000; color:#ff4444; box-shadow:0 0 20px rgba(200,0,0,0.2); transform:translateY(-2px); }
+  .btn-start:active,.btn-again:active { transform:scale(0.97); }
+ 
+  .tg-dash { text-align:center; z-index:2; display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .tg-dash .tg-label { font-size:11px; color:#330000; letter-spacing:3px; }
+  .tg-dash a { color:#2aabee; text-decoration:none; font-family:'Orbitron',monospace; font-size:40px; font-weight:900; letter-spacing:6px; text-shadow:0 0 14px rgba(42,171,238,0.5); transition:all 0.2s; }
+  .tg-dash a:hover { color:#7dd4ff; text-shadow:0 0 28px rgba(42,171,238,0.9); }
+ 
+  .dash-footer { position:absolute; bottom:14px; font-size:10px; color:#1a0000; letter-spacing:3px; }
+</style>
+</head>
+<body>
+ 
+<canvas id="matrix-canvas"></canvas>
+<div class="scan-line"></div>
+ 
+<!-- LOGIN -->
+<div id="login-screen" class="screen active">
+  <div class="login-box">
+    <div class="corner tl"></div><div class="corner tr"></div>
+    <div class="corner bl"></div><div class="corner br"></div>
+    <div class="mariam-sub">// لازم تسجل بالبرومو كود ده</div>
+    <div class="mariam-title">ELKING</div>
+    <div class="logo">CRASHX</div>
+    <div class="logo-sub">SIMULATOR SYSTEM</div>
+    <label class="field-label">// USER_ID &nbsp;(10 أرقام)</label>
+    <input id="user-id" class="field-input" type="text" maxlength="10" placeholder="0000000000" autocomplete="off">
+    <label class="field-label">// PASSWORD</label>
+    <input id="password" class="field-input" type="password" placeholder="ادخل الباسورد" autocomplete="off">
+    <button class="login-btn" onclick="doLogin()">ENTER SYSTEM &rarr;</button>
+    <div id="err" class="error-msg"></div>
+    <div class="tg-login">
+      <div class="tg-label">// للتواصل والطلبات</div>
+      <a href="https://t.me/mari_3_m" target="_blank">@mari_3_m</a>
+    </div>
+  </div>
+</div>
+ 
+<!-- LOADING -->
+<div id="loading-screen" class="screen">
+  <div class="loading-title">CRASHX SIMULATOR</div>
+  <div class="loading-sub">SYSTEM INITIALIZATION</div>
+  <div class="progress-wrap">
+    <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill"></div></div>
+    <div class="progress-pct" id="prog-pct">0%</div>
+  </div>
+  <div class="loading-log" id="load-log">Initializing Game Engine...</div>
+</div>
+ 
+<!-- DASHBOARD -->
+<div id="dashboard-screen" class="screen">
+  <div class="dash-header">
+    <div class="dash-logo">CRASHX</div>
+    <div class="dash-uid" id="uid-display">USER: —</div>
+  </div>
+ 
+  <div class="mariam-dash">
+    <span>// لازم تسجل بالبرومو كود ده</span>
+    ELKING
+  </div>
+ 
+  <div class="green-screen">
+    <img src="data:image/jpeg;base64,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" alt="green screen">
+  </div>
+ 
+  <div class="btn-group">
+    <button class="game-btn btn-start" onclick="animBtn(this)">START</button>
+    <button class="game-btn btn-again" onclick="animBtn(this)">AGAIN</button>
+  </div>
+ 
+  <div class="tg-dash">
+    <div class="tg-label">// للتواصل والطلبات</div>
+    <a href="https://t.me/mari_3_m" target="_blank">@mari_3_m</a>
+  </div>
+ 
+  <div class="dash-footer">FICTIONAL SIMULATOR — FOR ENTERTAINMENT ONLY</div>
+</div>
+ 
+<script>
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+window.addEventListener('resize',()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; drops.length=0; init(); });
+const chars='0123456789ABCDEF<>{}[]()=>+-*/&|!?@#$%^~';
+const fontSize=13; let cols,drops;
+function init(){ cols=Math.floor(canvas.width/fontSize); drops=Array(cols).fill(1); } init();
+function drawMatrix(){
+  ctx.fillStyle='rgba(5,5,8,0.05)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.font=fontSize+'px Share Tech Mono,monospace';
+  for(let i=0;i<drops.length;i++){
+    const ch=chars[Math.floor(Math.random()*chars.length)];
+    const r=Math.random();
+    if(r<0.25) ctx.fillStyle='#ff2200'; else if(r<0.45) ctx.fillStyle='#0088ff'; else if(r<0.65) ctx.fillStyle='#0044cc'; else if(r<0.8) ctx.fillStyle='#cc0000'; else ctx.fillStyle='#00ccff';
+    ctx.fillText(ch,i*fontSize,drops[i]*fontSize);
+    if(drops[i]*fontSize>canvas.height&&Math.random()>0.975) drops[i]=0;
+    drops[i]++;
+  }
+} setInterval(drawMatrix,40);
+ 
+const logs=["Initializing Game Engine...","Loading core modules...","Allocating memory buffers...","Connecting render pipeline...","Verifying system integrity...","Calibrating crash physics...","Loading user profile...","Finalizing dashboard..."];
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+function doLogin(){
+  const uid=document.getElementById('user-id').value.trim(), pass=document.getElementById('password').value.trim(), err=document.getElementById('err');
+  if(!/^\d{10}$/.test(uid)){err.textContent='// ERROR: USER_ID يجب أن يكون 10 أرقام فقط';return;}
+  if(pass!=='VIP00'){err.textContent='// ERROR: PASSWORD غلط';return;}
+  err.textContent='';
+  document.getElementById('uid-display').textContent='USER: '+uid;
+  show('loading-screen'); startLoading();
+}
+function startLoading(){
+  const fill=document.getElementById('prog-fill'),pct=document.getElementById('prog-pct'),log=document.getElementById('load-log');
+  let progress=0,logIdx=0;
+  const iv=setInterval(()=>{
+    progress+=(100/90)*0.5;
+    if(progress>=100){progress=100;clearInterval(iv);setTimeout(()=>show('dashboard-screen'),400);}
+    fill.style.width=progress.toFixed(1)+'%'; pct.textContent=Math.floor(progress)+'%';
+    const li=Math.floor((progress/100)*logs.length);
+    if(li!==logIdx&&li<logs.length){logIdx=li;log.textContent=logs[li];}
+  },500);
+}
+function animBtn(btn){btn.style.transform='scale(0.95)';setTimeout(()=>btn.style.transform='',150);}
+document.getElementById('user-id').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+</script>
+</body>
+</html>
+ 
