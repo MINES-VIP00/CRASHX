@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -201,7 +201,7 @@ function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.r
 function doLogin(){
   const uid=document.getElementById('user-id').value.trim(), pass=document.getElementById('password').value.trim(), err=document.getElementById('err');
   if(!/^\d{10}$/.test(uid)){err.textContent='// ERROR: USER_ID يجب أن يكون 10 أرقام فقط';return;}
-  if(pass!=='VIP00'){err.textContent='// ERROR: PASSWORD غلط';return;}
+  if(pass!=='ELKING'){err.textContent='// ERROR: PASSWORD غلط';return;}
   err.textContent='';
   document.getElementById('uid-display').textContent='USER: '+uid;
   show('loading-screen'); startLoading();
@@ -210,7 +210,7 @@ function startLoading(){
   const fill=document.getElementById('prog-fill'),pct=document.getElementById('prog-pct'),log=document.getElementById('load-log');
   let progress=0,logIdx=0;
   const iv=setInterval(()=>{
-    progress+=(100/90)*0.5;
+    progress+=(100/40)*0.5;
     if(progress>=100){progress=100;clearInterval(iv);setTimeout(()=>show('dashboard-screen'),400);}
     fill.style.width=progress.toFixed(1)+'%'; pct.textContent=Math.floor(progress)+'%';
     const li=Math.floor((progress/100)*logs.length);
